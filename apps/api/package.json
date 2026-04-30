@@ -8,9 +8,6 @@
     "start": "node dist/index.js",
     "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts"
   },
-  "prisma": {
-    "schema": "../../prisma/schema.prisma"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -27,7 +24,7 @@
     "ts-node": "^10.9.2"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.0.0",
     "prisma": "^6.0.0",
     "typescript": "^5.0.0",
     "bcryptjs": "^3.0.3",
