@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/client"
@@ -14,63 +9,66 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  passwordHash  String   @default("")
-  createdAt     DateTime @default(now())
-  workspaces    WorkspaceMember[]
-  links         Link[]
+  id           String            @id @default(cuid())
+  email        String            @unique
+  createdAt    DateTime          @default(now())
+  passwordHash String            @default("")
+  links        Link[]
+  workspaces   WorkspaceMember[]
 }
 
 model Workspace {
-  id        String   @id @default(cuid())
+  id        String            @id @default(cuid())
   name      String
-  slug      String   @unique  // e.g. "my-company"
-  createdAt DateTime @default(now())
-  members   WorkspaceMember[]
+  slug      String            @unique
+  createdAt DateTime          @default(now())
   links     Link[]
-}
-
-enum Role {
-  ADMIN
-  MEMBER
+  members   WorkspaceMember[]
 }
 
 model WorkspaceMember {
   workspaceId String
   userId      String
-  role        Role     @default(MEMBER)  // ADMIN | MEMBER
-  workspace   Workspace @relation(fields:[workspaceId], references:[id])
-  user        User      @relation(fields:[userId], references:[id])
+  role        Role      @default(MEMBER)
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
   @@id([workspaceId, userId])
 }
 
 model Link {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   workspaceId String
   userId      String
-  slug        String   @unique   // the short code: "abc123"
+  slug        String       @unique
   originalUrl String
-  isActive    Boolean  @default(true)
+  isActive    Boolean      @default(true)
   expiresAt   DateTime?
-  createdAt   DateTime @default(now())
-  workspace   Workspace @relation(fields:[workspaceId], references: [id])
-  user        User      @relation(fields:[userId], references: [id])
+  createdAt   DateTime     @default(now())
   clicks      ClickEvent[]
-  @@index([slug])   // CRITICAL: fast lookups on redirect
+  user        User         @relation(fields: [userId], references: [id])
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id])
+
+  @@index([slug])
 }
 
 model ClickEvent {
   id         String   @id @default(cuid())
   linkId     String
   timestamp  DateTime @default(now())
-  ipHash     String   // hashed, not raw IP (privacy)
+  ipHash     String
   country    String?
   city       String?
-  deviceType String?  // mobile | desktop | tablet
+  deviceType String?
   browser    String?
   os         String?
   referrer   String?
-  link       Link     @relation(fields:[linkId], references:[id])
-  @@index([linkId, timestamp])  // fast analytics queries
+  link       Link     @relation(fields: [linkId], references: [id])
+
+  @@index([linkId, timestamp])
+}
+
+enum Role {
+  ADMIN
+  MEMBER
 }
