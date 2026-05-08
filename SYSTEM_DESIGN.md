@@ -529,4 +529,4 @@ await redis.setex(`link:${slug}`, 3600, link.originalUrl)
 
 ---
 
-*Built by Sriya Desaraju · [GitHub](https://github.com/Sriyadesaraju/LinkMetrics) · [Live Demo](https://link-metrics-web.vercel.app/login)*
+*Built by Sriya Desaraju · [GitHub](https://github.com/Sriyadesaraju/LinkMetrics) · [Live Demo](https://link-metrics-gb0kdtpqp-sriyadesarajus-projects.vercel.app/login)*
