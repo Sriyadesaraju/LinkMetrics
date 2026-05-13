@@ -9,6 +9,11 @@ export const LinkRepository = {
   async findBySlug(slug: string) {
     return prisma.link.findUnique({ where: { slug } });
   },
+  async findByUrl(originalUrl: string, workspaceId: string) {
+    return prisma.link.findFirst({
+      where: { originalUrl, workspaceId, isActive: true },
+    });
+  },
 
   async findByWorkspace(workspaceId: string): Promise<LinkWithClicks[]> {
     return prisma.link.findMany({

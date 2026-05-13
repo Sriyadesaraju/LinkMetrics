@@ -23,8 +23,24 @@ export const LinkService = {
   }) {
     // 1. Validate URL
     urlSchema.parse(data.originalUrl);
+    // 2. Check for existing link with same URL in this workspace
+    const duplicate = await LinkRepository.findByUrl(
+      data.originalUrl,
+      data.workspaceId,
+    );
+    if (duplicate) {
+      const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+      return {
+        id: duplicate.id,
+        slug: duplicate.slug,
+        originalUrl: duplicate.originalUrl,
+        shortUrl: `${baseUrl}/${duplicate.slug}`,
+        createdAt: duplicate.createdAt,
+        isDuplicate: true, // tells frontend to show a warning
+      };
+    }
 
-    // 2. Determine slug
+    // 3. Determine slug
     let slug: string;
 
     if (data.customSlug) {
@@ -40,7 +56,7 @@ export const LinkService = {
       slug = await generateUniqueSlug();
     }
 
-    // 3. Create link
+    // 4. Create link
     const link = await LinkRepository.create({
       workspaceId: data.workspaceId,
       userId: data.userId,
