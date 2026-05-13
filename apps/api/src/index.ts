@@ -15,6 +15,7 @@ for (const key of required) {
 }
 
 const app = express();
+app.set('trust proxy', 1); // if behind a proxy (e.g. Heroku, Vercel) to get correct IPs  
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
