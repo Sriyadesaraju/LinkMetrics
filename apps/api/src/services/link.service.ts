@@ -21,6 +21,7 @@ export const LinkService = {
     customSlug?: string;
     workspaceId: string;
     userId: string;
+    expiresAt?: Date;
   }) {
     // 1. Validate URL
     urlSchema.parse(data.originalUrl);
@@ -63,6 +64,7 @@ export const LinkService = {
       userId: data.userId,
       slug,
       originalUrl: data.originalUrl,
+      expiresAt: data.expiresAt,
     });
 
     const baseUrl = process.env.BASE_URL || "http://localhost:3000";

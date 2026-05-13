@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/auth.store";
 import { useWorkspaceStore } from "../store/workspace.store";
+
 import {
   useWorkspaces,
   useLinks,
@@ -11,9 +12,9 @@ import { useNavigate } from "react-router-dom";
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const [expiresAt, setExpiresAt] = useState("");
   const { user, logout } = useAuthStore();
   const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
-
   const [showCreateLink, setShowCreateLink] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const [slugInput, setSlugInput] = useState("");
@@ -37,7 +38,12 @@ export function DashboardPage() {
   const handleCreateLink = () => {
     if (!urlInput) return;
     createLink(
-      { originalUrl: urlInput, customSlug: slugInput || undefined },
+      {
+        originalUrl: urlInput,
+        customSlug: slugInput || undefined,
+        expiresAt: expiresAt || undefined,
+      },
+
       {
         onSuccess: () => {
           setUrlInput("");
@@ -134,6 +140,13 @@ export function DashboardPage() {
                   onChange={(e) => setSlugInput(e.target.value)}
                   placeholder="Custom slug (optional)"
                   className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="datetime-local"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Expiry date (optional)"
                 />
                 <div className="flex gap-2">
                   <button

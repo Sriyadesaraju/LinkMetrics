@@ -7,6 +7,7 @@ const shortenSchema = z.object({
   originalUrl: z.string().url("Invalid URL"),
   customSlug: z.string().optional(),
   workspaceId: z.string().min(1, "Workspace ID required"),
+  expiresAt: z.string().datetime().optional(), // add this
 });
 
 export const LinkController = {
@@ -16,6 +17,7 @@ export const LinkController = {
       const result = await LinkService.shorten({
         ...body,
         userId: req.user!.userId,
+        expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
       });
       res.status(201).json(result);
     } catch (err) {

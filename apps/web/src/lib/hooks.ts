@@ -46,7 +46,11 @@ export const useCreateLink = () => {
   const qc = useQueryClient();
   const workspaceId = useWorkspaceStore((s) => s.activeWorkspace?.id);
   return useMutation({
-    mutationFn: (data: { originalUrl: string; customSlug?: string }) =>
+    mutationFn: (data: {
+      originalUrl: string;
+      customSlug?: string;
+      expiresAt?: string;
+    }) =>
       api
         .post("/api/links/shorten", { ...data, workspaceId })
         .then((r) => r.data),

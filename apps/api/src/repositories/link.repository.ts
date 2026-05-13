@@ -31,6 +31,7 @@ export const LinkRepository = {
     userId: string;
     slug: string;
     originalUrl: string;
+    expiresAt?: Date;
   }) {
     return prisma.link.create({ data });
   },
