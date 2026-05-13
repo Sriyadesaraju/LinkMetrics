@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.routes";
 import linkRoutes from "./routes/link.routes";
 import { RedirectController } from "./controllers/redirect.controller"; // add this
 import workspaceRoutes from "./routes/workspace.routes"; // add this
+import { rateLimitRedirect } from "./middleware/rateLimiter";
 
 const required = ["DATABASE_URL", "JWT_SECRET", "CORS_ORIGIN"];
 for (const key of required) {
@@ -15,7 +16,7 @@ for (const key of required) {
 }
 
 const app = express();
-app.set('trust proxy', 1); // if behind a proxy (e.g. Heroku, Vercel) to get correct IPs  
+app.set("trust proxy", 1); // if behind a proxy (e.g. Heroku, Vercel) to get correct IPs
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
@@ -29,7 +30,7 @@ app.use("/api/links", linkRoutes);
 app.use("/api/workspaces", workspaceRoutes);
 
 // Catch-all redirect — MUST be last before error handler
-app.get("/:slug", RedirectController.redirect);
+app.get("/:slug", rateLimitRedirect, RedirectController.redirect);
 
 app.use(errorHandler);
 

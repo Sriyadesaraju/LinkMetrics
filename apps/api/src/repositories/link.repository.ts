@@ -1,5 +1,6 @@
 import { prisma } from "../utils/prisma";
 import { Prisma } from "@prisma/client";
+import { redis } from "../utils/redis";
 
 type LinkWithClicks = Prisma.LinkGetPayload<{
   include: { _count: { select: { clicks: true } } };
@@ -35,10 +36,13 @@ export const LinkRepository = {
   },
 
   async softDelete(slug: string, workspaceId: string) {
-    return prisma.link.updateMany({
+    const result = await prisma.link.updateMany({
       where: { slug, workspaceId },
       data: { isActive: false },
     });
+    // Invalidate cache so redirect stops working immediately
+    await redis.del(`link:${slug}`);
+    return result;
   },
 
   async getClickCount(linkId: string) {

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { LinkRepository } from "../repositories/link.repository";
 import { generateUniqueSlug } from "../utils/slug";
 import { parseRequestMeta } from "../utils/parseRequest";
+import { redis } from "../utils/redis";
 
 const urlSchema = z.string().url("Invalid URL format");
 
@@ -108,13 +109,45 @@ export const LinkService = {
       referrer: string;
     },
   ) {
+    // 1. Check Redis cache first
+    const cached = await redis.get<string>(`link:${slug}`);
+
+    if (cached) {
+      // Cache hit — fire analytics async and return immediately
+      setImmediate(() => {
+        LinkRepository.findBySlug(slug).then((link) => {
+          if (!link) return;
+          const parsed = parseRequestMeta(
+            meta.ip,
+            meta.userAgent,
+            meta.referrer,
+            process.env.JWT_SECRET as string,
+          );
+          LinkRepository.logClick({
+            linkId: link.id,
+            ipHash: parsed.ipHash,
+            country: parsed.country ?? undefined,
+            city: parsed.city ?? undefined,
+            deviceType: parsed.deviceType ?? undefined,
+            browser: parsed.browser ?? undefined,
+            os: parsed.os ?? undefined,
+            referrer: parsed.referrer ?? undefined,
+          }).catch(console.error);
+        });
+      });
+      return cached;
+    }
+
+    // 2. Cache miss — query DB
     const link = await LinkRepository.findBySlug(slug);
 
     if (!link || !link.isActive) return null;
-
     if (link.expiresAt && link.expiresAt < new Date()) return null;
 
-    // Parse metadata (IP hash, device, country, etc.)
+    // 3. Populate cache with 1 hour TTL
+    await redis.setex(`link:${slug}`, 3600, link.originalUrl);
+
+    // 4. Log click async
     const parsed = parseRequestMeta(
       meta.ip,
       meta.userAgent,
@@ -122,7 +155,6 @@ export const LinkService = {
       process.env.JWT_SECRET as string,
     );
 
-    // Fire and forget logging
     setImmediate(() => {
       LinkRepository.logClick({
         linkId: link.id,
