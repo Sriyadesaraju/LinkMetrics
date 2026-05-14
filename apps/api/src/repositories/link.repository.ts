@@ -60,60 +60,61 @@ export const LinkRepository = {
     os?: string;
     referrer?: string;
   }) {
-    return prisma.clickEvent.create({
-      data: {
-        linkId: data.linkId,
-        ipHash: data.ipHash,
-        country: data.country ?? null,
-        city: data.city ?? null,
-        deviceType: data.deviceType ?? null,
-        browser: data.browser ?? null,
-        os: data.os ?? null,
-        referrer: data.referrer ?? null,
-      },
-    });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Run both writes in parallel — raw event + aggregate update
+    await Promise.all([
+      prisma.clickEvent.create({
+        data: {
+          linkId: data.linkId,
+          ipHash: data.ipHash,
+          country: data.country ?? null,
+          city: data.city ?? null,
+          deviceType: data.deviceType ?? null,
+          browser: data.browser ?? null,
+          os: data.os ?? null,
+          referrer: data.referrer ?? null,
+        },
+      }),
+
+      prisma.clickAggregateDaily.upsert({
+        where: {
+          linkId_date: {
+            linkId: data.linkId,
+            date: today,
+          },
+        },
+        update: { clicks: { increment: 1 } },
+        create: {
+          linkId: data.linkId,
+          date: today,
+          country: data.country ?? null,
+          deviceType: data.deviceType ?? null,
+          browser: data.browser ?? null,
+          clicks: 1,
+        },
+      }),
+    ]);
   },
 
   async getAnalytics(linkId: string, from: Date, to: Date) {
-    const where = { linkId, timestamp: { gte: from, lte: to } };
+    // Total clicks still from raw events (accurate)
+    // Grouped analytics from pre-aggregated table (fast)
+    const [totalClicks, aggregates, byDay] = await Promise.all([
+      prisma.clickEvent.count({
+        where: { linkId, timestamp: { gte: from, lte: to } },
+      }),
 
-    const [totalClicks, byCountry, byDevice, byBrowser, byReferrer, byDay] =
-      await Promise.all([
-        prisma.clickEvent.count({ where }),
+      prisma.clickAggregateDaily.findMany({
+        where: {
+          linkId,
+          date: { gte: from, lte: to },
+        },
+      }),
 
-        prisma.clickEvent.groupBy({
-          by: ["country"],
-          where,
-          _count: { country: true },
-          orderBy: { _count: { country: "desc" } },
-          take: 10,
-        }),
-
-        prisma.clickEvent.groupBy({
-          by: ["deviceType"],
-          where,
-          _count: { deviceType: true },
-          orderBy: { _count: { deviceType: "desc" } },
-        }),
-
-        prisma.clickEvent.groupBy({
-          by: ["browser"],
-          where,
-          _count: { browser: true },
-          orderBy: { _count: { browser: "desc" } },
-          take: 5,
-        }),
-
-        prisma.clickEvent.groupBy({
-          by: ["referrer"],
-          where,
-          _count: { referrer: true },
-          orderBy: { _count: { referrer: "desc" } },
-          take: 5,
-        }),
-
-        prisma.$queryRaw<{ date: string; count: number }[]>`
-      SELECT 
+      prisma.$queryRaw<{ date: string; count: number }[]>`
+      SELECT
         DATE("timestamp")::text AS date,
         COUNT(*)::int AS count
       FROM "ClickEvent"
@@ -123,14 +124,45 @@ export const LinkRepository = {
       GROUP BY DATE("timestamp")
       ORDER BY DATE("timestamp") ASC
     `,
-      ]);
+    ]);
+
+    // Aggregate the pre-computed rows in JavaScript
+    // This is fast because there are at most (days × countries × devices × browsers) rows
+    const countryMap = new Map<string, number>();
+    const deviceMap = new Map<string, number>();
+    const browserMap = new Map<string, number>();
+
+    for (const row of aggregates) {
+      if (row.country) {
+        countryMap.set(
+          row.country,
+          (countryMap.get(row.country) ?? 0) + row.clicks,
+        );
+      }
+      if (row.deviceType) {
+        deviceMap.set(
+          row.deviceType,
+          (deviceMap.get(row.deviceType) ?? 0) + row.clicks,
+        );
+      }
+      if (row.browser) {
+        browserMap.set(
+          row.browser,
+          (browserMap.get(row.browser) ?? 0) + row.clicks,
+        );
+      }
+    }
+
+    const toSortedArray = (map: Map<string, number>) =>
+      Array.from(map.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, count]) => ({ name, count }));
 
     return {
       totalClicks,
-      byCountry,
-      byDevice,
-      byBrowser,
-      byReferrer,
+      byCountry: toSortedArray(countryMap).slice(0, 10),
+      byDevice: toSortedArray(deviceMap),
+      byBrowser: toSortedArray(browserMap).slice(0, 5),
       byDay,
     };
   },

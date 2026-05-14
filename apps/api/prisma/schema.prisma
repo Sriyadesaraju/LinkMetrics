@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -46,6 +45,7 @@ model Link {
   expiresAt   DateTime?
   createdAt   DateTime     @default(now())
   clicks      ClickEvent[]
+  aggregates  ClickAggregateDaily[]
   user        User         @relation(fields: [userId], references: [id])
   workspace   Workspace    @relation(fields: [workspaceId], references: [id])
 
@@ -63,7 +63,7 @@ model ClickEvent {
   browser    String?
   os         String?
   referrer   String?
-  link       Link     @relation(fields: [linkId], references: [id])
+  link       Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
 
   @@index([linkId, timestamp])
 }
@@ -71,4 +71,18 @@ model ClickEvent {
 enum Role {
   ADMIN
   MEMBER
+}
+
+model ClickAggregateDaily {
+  id          String   @id @default(cuid())
+  linkId      String
+  date        DateTime @db.Date
+  country     String?
+  deviceType  String?
+  browser     String?
+  clicks      Int      @default(0)
+  link        Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+@@unique([linkId, date])
+  @@index([linkId, date])
 }

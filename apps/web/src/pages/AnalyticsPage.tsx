@@ -38,18 +38,18 @@ export function AnalyticsPage() {
   }
 
   const deviceData = data.byDevice.map((d: any) => ({
-    name: d.deviceType,
-    value: d._count.deviceType,
+    name: d.name,
+    value: d.count,
   }));
 
   const browserData = data.byBrowser.map((d: any) => ({
-    name: d.browser,
-    clicks: d._count.browser,
+    name: d.name,
+    clicks: d.count,
   }));
 
   const countryData = data.byCountry.map((d: any) => ({
-    name: d.country,
-    clicks: d._count.country,
+    name: d.name,
+    clicks: d.count,
   }));
 
   return (

@@ -195,12 +195,11 @@ export const LinkService = {
 
     return {
       totalClicks: raw.totalClicks,
-      byCountry: raw.byCountry.filter((r) => r.country !== null),
-      byDevice: raw.byDevice.filter((r) => r.deviceType !== null),
-      byBrowser: raw.byBrowser.filter((r) => r.browser !== null),
-      byReferrer: raw.byReferrer.filter(
-        (r) => r.referrer !== null && r.referrer !== "",
-      ),
+      byCountry: raw.byCountry,
+      byDevice: raw.byDevice,
+      byBrowser: raw.byBrowser,
+      byDay: raw.byDay,
+      byReferrer: [], // referrer stays from raw events — add back if needed
     };
   },
 };
