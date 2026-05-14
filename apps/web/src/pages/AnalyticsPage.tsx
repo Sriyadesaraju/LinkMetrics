@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { useAnalytics } from "../lib/hooks";
 import { useWorkspaceStore } from "../store/workspace.store";
-import { useAnalyticsSummary } from "../lib/hooks";
+// import { useAnalyticsSummary } from "../lib/hooks";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
