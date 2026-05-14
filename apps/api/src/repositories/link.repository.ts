@@ -166,4 +166,19 @@ export const LinkRepository = {
       byDay,
     };
   },
+  async getRawClicksForExport(linkId: string, from: Date, to: Date) {
+    return prisma.clickEvent.findMany({
+      where: { linkId, timestamp: { gte: from, lte: to } },
+      select: {
+        timestamp: true,
+        country: true,
+        city: true,
+        deviceType: true,
+        browser: true,
+        os: true,
+        referrer: true,
+      },
+      orderBy: { timestamp: "desc" },
+    });
+  },
 };

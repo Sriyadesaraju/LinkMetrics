@@ -13,6 +13,7 @@ import {
   Bar,
 } from "recharts";
 import { useAnalytics } from "../lib/hooks";
+import { useWorkspaceStore } from "../store/workspace.store";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
@@ -51,7 +52,13 @@ export function AnalyticsPage() {
     name: d.name,
     clicks: d.count,
   }));
-
+  const workspaceId = useWorkspaceStore((s) => s.activeWorkspace?.id);
+  const handleExport = () => {
+    window.open(
+      `${import.meta.env.VITE_API_URL}/api/links/${slug}/analytics/export?workspaceId=${workspaceId}`,
+      "_blank",
+    );
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b px-6 py-4 flex items-center gap-4">
@@ -60,6 +67,12 @@ export function AnalyticsPage() {
           className="text-sm text-gray-500 hover:text-gray-900"
         >
           ← Back
+        </button>
+        <button
+          onClick={handleExport}
+          className="text-sm border rounded-lg px-3 py-1.5 text-gray-600 hover:bg-gray-50 ml-auto"
+        >
+          Export CSV
         </button>
         <h1 className="text-lg font-semibold">Analytics — /{slug}</h1>
       </nav>

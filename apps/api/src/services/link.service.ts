@@ -202,4 +202,29 @@ export const LinkService = {
       byReferrer: [], // referrer stays from raw events — add back if needed
     };
   },
+  async exportAnalytics(
+    slug: string,
+    workspaceId: string,
+    from?: string,
+    to?: string,
+  ) {
+    const link = await LinkRepository.findBySlug(slug);
+    if (!link || link.workspaceId !== workspaceId) {
+      const err: any = new Error("Link not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const fromDate = from
+      ? new Date(from)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const toDate = to ? new Date(to) : new Date();
+
+    const rows = await LinkRepository.getRawClicksForExport(
+      link.id,
+      fromDate,
+      toDate,
+    );
+    return rows;
+  },
 };

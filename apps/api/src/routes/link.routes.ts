@@ -9,4 +9,5 @@ router.post("/shorten", requireAuth, rateLimitShorten, LinkController.shorten);
 router.get("/", requireAuth, LinkController.list);
 router.get("/:slug/stats", requireAuth, LinkController.getStats);
 router.get("/:slug/analytics", requireAuth, LinkController.getAnalytics);
+router.get('/:slug/analytics/export', requireAuth, LinkController.exportAnalytics)
 export default router;

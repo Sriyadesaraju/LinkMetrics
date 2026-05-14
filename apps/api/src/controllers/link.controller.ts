@@ -77,4 +77,38 @@ export const LinkController = {
       next(err);
     }
   },
+  async exportAnalytics(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const workspaceId = req.query.workspaceId as string;
+      if (!workspaceId)
+        return res.status(400).json({ error: "workspaceId required" });
+
+      const rows = await LinkService.exportAnalytics(
+        req.params["slug"] as string,
+        workspaceId,
+        req.query.from as string,
+        req.query.to as string,
+      );
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="analytics-${req.params["slug"]}.csv"`,
+      );
+
+      // Write CSV header
+      res.write("timestamp,country,city,device,browser,os,referrer\n");
+
+      // Write rows
+      for (const row of rows) {
+        res.write(
+          `${row.timestamp.toISOString()},${row.country ?? ""},${row.city ?? ""},${row.deviceType ?? ""},${row.browser ?? ""},${row.os ?? ""},${row.referrer ?? ""}\n`,
+        );
+      }
+
+      res.end();
+    } catch (err) {
+      next(err);
+    }
+  },
 };
