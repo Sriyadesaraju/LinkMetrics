@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/auth.store";
 import { useWorkspaceStore } from "../store/workspace.store";
+import { UTMBuilder } from "../components/UTMBuilder";
 
 import {
   useWorkspaces,
@@ -11,8 +12,10 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export function DashboardPage() {
-  const navigate = useNavigate();
+  const [showUtm, setShowUtm] = useState(false);
+  const [finalUrl, setFinalUrl] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
   const [showCreateLink, setShowCreateLink] = useState(false);
@@ -36,18 +39,21 @@ export function DashboardPage() {
   };
 
   const handleCreateLink = () => {
-    if (!urlInput) return;
+    const urlToShorten = finalUrl || urlInput;
+    if (!urlToShorten) return;
     createLink(
       {
-        originalUrl: urlInput,
+        originalUrl: urlToShorten,
         customSlug: slugInput || undefined,
         expiresAt: expiresAt || undefined,
       },
-
       {
         onSuccess: () => {
           setUrlInput("");
           setSlugInput("");
+          setExpiresAt("");
+          setFinalUrl("");
+          setShowUtm(false);
           setShowCreateLink(false);
         },
       },
@@ -134,6 +140,22 @@ export function DashboardPage() {
                   placeholder="https://your-long-url.com"
                   className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowUtm(!showUtm)}
+                  className="text-xs text-blue-600 hover:underline text-left"
+                >
+                  {showUtm
+                    ? "− Hide UTM parameters"
+                    : "+ Add UTM tracking parameters"}
+                </button>
+
+                {showUtm && (
+                  <UTMBuilder
+                    baseUrl={urlInput}
+                    onChange={(tagged) => setFinalUrl(tagged)}
+                  />
+                )}
                 <input
                   type="text"
                   value={slugInput}
