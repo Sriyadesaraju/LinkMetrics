@@ -9,8 +9,14 @@ import linkRoutes from "./routes/link.routes";
 import { RedirectController } from "./controllers/redirect.controller"; // add this
 import workspaceRoutes from "./routes/workspace.routes"; // add this
 import { rateLimitRedirect } from "./middleware/rateLimiter";
+import aiRoutes from "./routes/ai.routes";
 
-const required = ["DATABASE_URL", "JWT_SECRET", "CORS_ORIGIN"];
+const required = [
+  "DATABASE_URL",
+  "JWT_SECRET",
+  "CORS_ORIGIN",
+  "GEMINI_API_KEY",
+];
 for (const key of required) {
   if (!process.env[key]) throw new Error(`Missing required env var: ${key}`);
 }
@@ -28,6 +34,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/links", linkRoutes);
 // then with your other routes:
 app.use("/api/workspaces", workspaceRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Catch-all redirect — MUST be last before error handler
 app.get("/:slug", rateLimitRedirect, RedirectController.redirect);
