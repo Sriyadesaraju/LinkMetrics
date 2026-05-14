@@ -252,9 +252,9 @@ export function AnalyticsPage() {
               </thead>
               <tbody className="divide-y">
                 {data.byReferrer.map((r: any) => (
-                  <tr key={r.referrer}>
-                    <td className="py-2">{r.referrer}</td>
-                    <td className="py-2 font-medium">{r._count.referrer}</td>
+                  <tr key={r.name}>
+                    <td className="py-2">{r.name}</td>
+                    <td className="py-2 font-medium">{r.count}</td>
                   </tr>
                 ))}
               </tbody>
