@@ -22,11 +22,11 @@ const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 export function AnalyticsPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const {
-    mutate: getSummary,
-    data: summaryData,
-    isPending: summarizing,
-  } = useAnalyticsSummary();
+  // const {
+  //  mutate: getSummary,
+  //  data: summaryData,
+  //  isPending: summarizing,
+  //} = useAnalyticsSummary();
   const [from, setFrom] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -119,7 +119,7 @@ export function AnalyticsPage() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-        {summaryData?.summary && (
+        {/*{summaryData?.summary && (
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-purple-600 text-sm">✦</span>
