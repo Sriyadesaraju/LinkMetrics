@@ -15,12 +15,18 @@ import {
 } from "recharts";
 import { useAnalytics } from "../lib/hooks";
 import { useWorkspaceStore } from "../store/workspace.store";
+import { useAnalyticsSummary } from "../lib/hooks";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export function AnalyticsPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const {
+    mutate: getSummary,
+    data: summaryData,
+    isPending: summarizing,
+  } = useAnalyticsSummary();
   const [from, setFrom] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -99,11 +105,31 @@ export function AnalyticsPage() {
           >
             Export CSV
           </button>
+          <button
+            onClick={() => getSummary(data)}
+            disabled={summarizing || !data}
+            className="text-sm bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 disabled:opacity-40"
+          >
+            {summarizing ? "Analysing..." : "✦ AI Summary"}
+          </button>
         </div>
         <h1 className="text-lg font-semibold">Analytics — /{slug}</h1>
       </nav>
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+        {summaryData?.summary && (
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-purple-600 text-sm">✦</span>
+              <p className="text-xs font-medium text-purple-600 uppercase tracking-wide">
+                AI Insight
+              </p>
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              {summaryData.summary}
+            </p>
+          </div>
+        )}
         {/* Stat card */}
         <div className="bg-white border rounded-xl p-6">
           <p className="text-sm text-gray-500 mb-1">Total clicks</p>

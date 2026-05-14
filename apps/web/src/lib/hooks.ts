@@ -76,3 +76,13 @@ export const useAnalytics = (
     enabled: !!slug && !!workspaceId,
   });
 };
+export const useUTMSuggest = () =>
+  useMutation({
+    mutationFn: (url: string) =>
+      api.post('/api/ai/utm-suggest', { url }).then((r) => r.data),
+  })
+export const useAnalyticsSummary = () =>
+  useMutation({
+    mutationFn: (analyticsData: any) =>
+      api.post('/api/ai/analytics-summary', analyticsData).then((r) => r.data),
+  })
