@@ -105,13 +105,15 @@ export function AnalyticsPage() {
           >
             Export CSV
           </button>
-          <button
-            onClick={() => getSummary(data)}
-            disabled={summarizing || !data}
-            className="text-sm bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 disabled:opacity-40"
-          >
-            {summarizing ? "Analysing..." : "✦ AI Summary"}
-          </button>
+          {/*
+<button
+  onClick={() => getSummary(data)}
+  disabled={summarizing || !data}
+  className="text-sm bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 disabled:opacity-40"
+>
+  {summarizing ? "Analysing..." : "✦ AI Summary"}
+</button>
+*/}
         </div>
         <h1 className="text-lg font-semibold">Analytics — /{slug}</h1>
       </nav>
