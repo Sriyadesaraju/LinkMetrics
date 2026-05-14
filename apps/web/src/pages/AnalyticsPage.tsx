@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   LineChart,
@@ -20,7 +21,14 @@ const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 export function AnalyticsPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { data, isLoading, error } = useAnalytics(slug ?? null);
+  const [from, setFrom] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split("T")[0];
+  });
+
+  const [to, setTo] = useState(() => new Date().toISOString().split("T")[0]);
+  const { data, isLoading, error } = useAnalytics(slug ?? null, from, to);
 
   if (isLoading) {
     return (
@@ -68,12 +76,30 @@ export function AnalyticsPage() {
         >
           ← Back
         </button>
-        <button
-          onClick={handleExport}
-          className="text-sm border rounded-lg px-3 py-1.5 text-gray-600 hover:bg-gray-50 ml-auto"
-        >
-          Export CSV
-        </button>
+        <div className="flex items-center gap-2 ml-auto">
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="text-sm border rounded px-2 py-1"
+          />
+
+          <span className="text-gray-400 text-sm">to</span>
+
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="text-sm border rounded px-2 py-1"
+          />
+
+          <button
+            onClick={handleExport}
+            className="text-sm border rounded-lg px-3 py-1.5 text-gray-600 hover:bg-gray-50"
+          >
+            Export CSV
+          </button>
+        </div>
         <h1 className="text-lg font-semibold">Analytics — /{slug}</h1>
       </nav>
 

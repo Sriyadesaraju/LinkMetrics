@@ -57,14 +57,22 @@ export const useCreateLink = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["links", workspaceId] }),
   });
 };
-export const useAnalytics = (slug: string | null) => {
+export const useAnalytics = (
+  slug: string | null,
+  from?: string,
+  to?: string,
+) => {
   const workspaceId = useWorkspaceStore((s) => s.activeWorkspace?.id);
   return useQuery({
-    queryKey: ["analytics", slug, workspaceId],
-    queryFn: () =>
-      api
-        .get(`/api/links/${slug}/analytics?workspaceId=${workspaceId}`)
-        .then((r) => r.data),
+    queryKey: ["analytics", slug, workspaceId, from, to],
+    queryFn: () => {
+      const params = new URLSearchParams({ workspaceId: workspaceId! });
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+      return api
+        .get(`/api/links/${slug}/analytics?${params}`)
+        .then((r) => r.data);
+    },
     enabled: !!slug && !!workspaceId,
   });
 };
