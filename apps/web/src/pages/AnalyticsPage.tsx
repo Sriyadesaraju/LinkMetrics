@@ -35,7 +35,7 @@ export function AnalyticsPage() {
 
   const [to, setTo] = useState(() => new Date().toISOString().split("T")[0]);
   const { data, isLoading, error } = useAnalytics(slug ?? null, from, to);
-
+const workspaceId = useWorkspaceStore((s) => s.activeWorkspace?.id);
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -66,7 +66,6 @@ export function AnalyticsPage() {
     name: d.name,
     clicks: d.count,
   }));
-  const workspaceId = useWorkspaceStore((s) => s.activeWorkspace?.id);
   const handleExport = () => {
     window.open(
       `${import.meta.env.VITE_API_URL}/api/links/${slug}/analytics/export?workspaceId=${workspaceId}`,
