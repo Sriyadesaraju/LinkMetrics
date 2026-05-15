@@ -1,9 +1,12 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate, Link } from 'react-router-dom'
-import { useLogin } from '../lib/hooks'
-import { useAuthStore } from '../store/auth.store'
+import { Link, useNavigate } from 'react-router-dom'
+import { useLogin } from '@/lib/hooks'
+import { useAuthStore } from '@/store/auth.store'
+import { AuthLayout } from '@/components/layout/AuthLayout'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const schema = z.object({
   email: z.string().email('Invalid email'),
@@ -33,63 +36,42 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-sm border w-full max-w-md">
-        <h1 className="text-2xl font-semibold mb-6">Sign in</h1>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              {...register('email')}
-              type="email"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              {...register('password')}
-              type="password"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
-
-          {error && (
-            <p className="text-red-500 text-sm">
-              {(error as any).response?.data?.error || 'Login failed'}
-            </p>
+    <AuthLayout title="Welcome back" subtitle="Sign in to your LinkMetrics workspace">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div>
+          <label className="block text-sm font-medium text-navy-900 mb-1.5">Email</label>
+          <Input {...register('email')} type="email" placeholder="you@company.com" />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1.5">{errors.email.message}</p>
           )}
+        </div>
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isPending ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
+        <div>
+          <label className="block text-sm font-medium text-navy-900 mb-1.5">Password</label>
+          <Input {...register('password')} type="password" placeholder="••••••••" />
+          {errors.password && (
+            <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>
+          )}
+        </div>
 
-        <p className="text-sm text-gray-500 mt-4 text-center">
-          No account?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Create one
-          </Link>
-        </p>
-      </div>
-    </div>
+        {error && (
+          <p className="text-red-500 text-sm rounded-lg bg-red-50 border border-red-100 px-3 py-2">
+            {(error as { response?: { data?: { error?: string } } }).response?.data?.error ||
+              'Login failed'}
+          </p>
+        )}
+
+        <Button type="submit" disabled={isPending} className="w-full h-11">
+          {isPending ? 'Signing in...' : 'Sign in'}
+        </Button>
+      </form>
+
+      <p className="text-sm text-muted mt-6 text-center">
+        No account?{' '}
+        <Link to="/register" className="text-accent font-medium hover:underline">
+          Create one free
+        </Link>
+      </p>
+    </AuthLayout>
   )
 }
