@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -82,10 +81,12 @@ export function UTMBuilder({ baseUrl, onChange }: Props) {
     })
   }
 
+  const taggedUrl = buildUrl(params) || baseUrl
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-hidden">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-navy-900">UTM parameters</p>
           <p className="text-xs text-muted">Track campaign performance in analytics</p>
         </div>
@@ -95,7 +96,7 @@ export function UTMBuilder({ baseUrl, onChange }: Props) {
           variant="secondary"
           onClick={handleAISuggest}
           disabled={!baseUrl || suggesting}
-          className="gap-1.5 border-orange-200 bg-accent-muted text-accent-hover hover:bg-orange-100"
+          className="shrink-0 gap-1.5 border-orange-200 bg-accent-muted text-accent-hover hover:bg-orange-100"
         >
           {suggesting ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -106,14 +107,14 @@ export function UTMBuilder({ baseUrl, onChange }: Props) {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex min-w-0 flex-wrap gap-2">
         {SUGGESTION_CHIPS.map((chip) => (
           <button
             key={chip.campaign}
             type="button"
             onClick={() => applyParams({ ...params, ...chip, content: '', term: '' })}
             className={cn(
-              'rounded-full border border-border px-3 py-1 text-xs font-medium text-muted',
+              'max-w-full truncate rounded-full border border-border px-3 py-1 text-xs font-medium text-muted',
               'hover:border-accent/40 hover:bg-accent-muted hover:text-accent-hover transition-all',
             )}
           >
@@ -122,35 +123,28 @@ export function UTMBuilder({ baseUrl, onChange }: Props) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
         {FIELDS.map(({ key, label, placeholder }) => (
-          <div key={key}>
+          <div key={key} className="min-w-0">
             <label className="text-xs font-medium text-muted mb-1 block">{label}</label>
             <Input
               value={params[key]}
               onChange={(e) => handleChange(key, e.target.value)}
               placeholder={placeholder}
-              className="h-9 text-sm"
+              className="h-9 w-full min-w-0 text-sm"
             />
           </div>
         ))}
       </div>
 
-      <AnimatePresence>
-        {baseUrl && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="rounded-xl border border-border bg-surface p-3"
-          >
-            <p className="text-xs font-medium text-muted mb-1.5">Tagged URL preview</p>
-            <p className="text-xs font-mono text-navy-700 break-all leading-relaxed">
-              {buildUrl(params) || baseUrl}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {baseUrl && (
+        <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface p-3">
+          <p className="text-xs font-medium text-muted mb-1.5">Tagged URL preview</p>
+          <p className="text-xs font-mono text-navy-700 break-all [overflow-wrap:anywhere] leading-relaxed">
+            {taggedUrl}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
