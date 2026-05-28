@@ -30,13 +30,8 @@ export const LinkController = {
 
   async list(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const workspaceId = req.query.workspaceId as string;
-      if (!workspaceId) {
-        return res
-          .status(400)
-          .json({ error: "workspaceId query param required" });
-      }
-      const links = await LinkService.listLinks(workspaceId);
+      // req.workspaceId is set + access-checked by requireWorkspace.
+      const links = await LinkService.listLinks(req.workspaceId!);
       res.json(links);
     } catch (err) {
       next(err);
@@ -45,15 +40,9 @@ export const LinkController = {
 
   async getStats(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const workspaceId = req.query.workspaceId as string;
-      if (!workspaceId) {
-        return res
-          .status(400)
-          .json({ error: "workspaceId query param required" });
-      }
       const stats = await LinkService.getStats(
         req.params["slug"] as string,
-        workspaceId,
+        req.workspaceId!,
       );
       res.json(stats);
     } catch (err) {
@@ -62,13 +51,9 @@ export const LinkController = {
   },
   async getAnalytics(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const workspaceId = req.query.workspaceId as string;
-      if (!workspaceId) {
-        return res.status(400).json({ error: "workspaceId required" });
-      }
       const data = await LinkService.getAnalytics(
         req.params["slug"] as string,
-        workspaceId,
+        req.workspaceId!,
         req.query.from as string,
         req.query.to as string,
       );
@@ -79,13 +64,9 @@ export const LinkController = {
   },
   async exportAnalytics(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const workspaceId = req.query.workspaceId as string;
-      if (!workspaceId)
-        return res.status(400).json({ error: "workspaceId required" });
-
       const rows = await LinkService.exportAnalytics(
         req.params["slug"] as string,
-        workspaceId,
+        req.workspaceId!,
         req.query.from as string,
         req.query.to as string,
       );

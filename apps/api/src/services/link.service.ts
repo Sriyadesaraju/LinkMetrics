@@ -2,9 +2,40 @@ import { z } from "zod";
 import { LinkRepository } from "../repositories/link.repository";
 import { generateUniqueSlug } from "../utils/slug";
 import { parseRequestMeta } from "../utils/parseRequest";
-import { redis } from "../utils/redis";
+import { redis, linkCacheKey } from "../utils/redis";
 
 const urlSchema = z.string().url("Invalid URL format");
+
+// Shape stored in the redirect cache. expiresAt is an ISO string because Redis
+// serializes to JSON (Date -> string); null means the link never expires.
+type CachedLink = { id: string; url: string; expiresAt: string | null };
+
+// Fire-and-forget click logging. Runs after the HTTP response is flushed
+// (setImmediate) so analytics never adds latency to the redirect. Single path
+// for both cache-hit and cache-miss so the two can't drift.
+function logClickAsync(
+  linkId: string,
+  meta: { ip: string; userAgent: string; referrer: string },
+) {
+  setImmediate(() => {
+    const parsed = parseRequestMeta(
+      meta.ip,
+      meta.userAgent,
+      meta.referrer,
+      process.env.JWT_SECRET as string,
+    );
+    LinkRepository.logClick({
+      linkId,
+      ipHash: parsed.ipHash,
+      country: parsed.country ?? undefined,
+      city: parsed.city ?? undefined,
+      deviceType: parsed.deviceType ?? undefined,
+      browser: parsed.browser ?? undefined,
+      os: parsed.os ?? undefined,
+      referrer: parsed.referrer ?? undefined,
+    }).catch(console.error);
+  });
+}
 
 const slugSchema = z
   .string()
@@ -111,64 +142,35 @@ export const LinkService = {
       referrer: string;
     },
   ) {
-    // 1. Check Redis cache first
-    const cached = await redis.get<string>(`link:${slug}`);
+    const key = linkCacheKey(slug);
 
+    // 1. Cache hit — but re-validate expiry. A cached copy can outlive the
+    //    link's validity (it expires by the clock, with nothing to evict it),
+    //    so we must check here, not only on the miss path.
+    const cached = await redis.get<CachedLink>(key);
     if (cached) {
-      // Cache hit — fire analytics async and return immediately
-      setImmediate(() => {
-        LinkRepository.findBySlug(slug).then((link) => {
-          if (!link) return;
-          const parsed = parseRequestMeta(
-            meta.ip,
-            meta.userAgent,
-            meta.referrer,
-            process.env.JWT_SECRET as string,
-          );
-          LinkRepository.logClick({
-            linkId: link.id,
-            ipHash: parsed.ipHash,
-            country: parsed.country ?? undefined,
-            city: parsed.city ?? undefined,
-            deviceType: parsed.deviceType ?? undefined,
-            browser: parsed.browser ?? undefined,
-            os: parsed.os ?? undefined,
-            referrer: parsed.referrer ?? undefined,
-          }).catch(console.error);
-        });
-      });
-      return cached;
+      if (cached.expiresAt && new Date(cached.expiresAt) < new Date()) {
+        await redis.del(key); // expired mid-TTL — evict and fall through to 404
+        return null;
+      }
+      logClickAsync(cached.id, meta); // reuse cached id — no second DB read
+      return cached.url;
     }
 
-    // 2. Cache miss — query DB
+    // 2. Cache miss — query DB and validate.
     const link = await LinkRepository.findBySlug(slug);
-
     if (!link || !link.isActive) return null;
     if (link.expiresAt && link.expiresAt < new Date()) return null;
 
-    // 3. Populate cache with 1 hour TTL
-    await redis.setex(`link:${slug}`, 3600, link.originalUrl);
+    // 3. Populate cache (1h TTL) with everything the hit path needs.
+    await redis.setex(key, 3600, {
+      id: link.id,
+      url: link.originalUrl,
+      expiresAt: link.expiresAt ? link.expiresAt.toISOString() : null,
+    } satisfies CachedLink);
 
-    // 4. Log click async
-    const parsed = parseRequestMeta(
-      meta.ip,
-      meta.userAgent,
-      meta.referrer,
-      process.env.JWT_SECRET as string,
-    );
-
-    setImmediate(() => {
-      LinkRepository.logClick({
-        linkId: link.id,
-        ipHash: parsed.ipHash,
-        country: parsed.country ?? undefined,
-        city: parsed.city ?? undefined,
-        deviceType: parsed.deviceType ?? undefined,
-        browser: parsed.browser ?? undefined,
-        os: parsed.os ?? undefined,
-        referrer: parsed.referrer ?? undefined,
-      }).catch(console.error);
-    });
+    // 4. Log click async.
+    logClickAsync(link.id, meta);
 
     return link.originalUrl;
   },

@@ -1,6 +1,6 @@
 import { prisma } from "../utils/prisma";
 import { Prisma } from "@prisma/client";
-import { redis } from "../utils/redis";
+import { redis, linkCacheKey } from "../utils/redis";
 
 type LinkWithClicks = Prisma.LinkGetPayload<{
   include: { _count: { select: { clicks: true } } };
@@ -42,7 +42,7 @@ export const LinkRepository = {
       data: { isActive: false },
     });
     // Invalidate cache so redirect stops working immediately
-    await redis.del(`link:${slug}`);
+    await redis.del(linkCacheKey(slug));
     return result;
   },
 

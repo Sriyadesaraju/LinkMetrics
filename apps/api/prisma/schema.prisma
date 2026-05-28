@@ -49,7 +49,9 @@ model Link {
   user        User         @relation(fields: [userId], references: [id])
   workspace   Workspace    @relation(fields: [workspaceId], references: [id])
 
-  @@index([slug])
+  // slug is already indexed by its @unique constraint, so no @@index([slug]).
+  // workspaceId is filtered on every dashboard list query.
+  @@index([workspaceId])
 }
 
 model ClickEvent {

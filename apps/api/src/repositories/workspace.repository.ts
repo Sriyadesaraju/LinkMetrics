@@ -27,4 +27,12 @@ export const WorkspaceRepository = {
       },
     })
   },
+
+  // Authorization lookup: is this user a member of this workspace?
+  // Uses the WorkspaceMember composite PK (workspaceId, userId).
+  async findMembership(workspaceId: string, userId: string) {
+    return prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId } },
+    })
+  },
 }

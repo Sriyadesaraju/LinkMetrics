@@ -3,7 +3,12 @@ import jwt from 'jsonwebtoken'
 
 // Extend Express's Request type to include our user
 export interface AuthRequest extends Request {
+  // include headers so TypeScript knows about req.headers on this extended type
+  headers?: { [key: string]: any }
   user?: { userId: string; email: string }
+  // Set by requireWorkspace after membership is verified — controllers should
+  // trust this, not the raw client-supplied workspaceId.
+  workspaceId?: string
 }
 
 export const requireAuth = (
@@ -11,7 +16,7 @@ export const requireAuth = (
   res: Response,
   next: NextFunction
 ): void => {
-  const authHeader = req.headers.authorization
+  const authHeader = req.headers?.authorization
 
   // Token must be sent as: Authorization: Bearer <token>
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
